@@ -135,7 +135,7 @@ const SignatureHistory: React.FC = () => {
           </div>
         </div>
         
-        <Button variant="outline" size="sm" onClick={handleBulkClear} className="flex-shrink-0 ml-2">
+        <Button variant="outline" size="sm" onClick={handleBulkClear} className="flex-shrink-0 ml-2 cursor-pointer">
           <Trash2 className="w-4 h-4 sm:mr-2" />
           <span className="hidden sm:inline">Clear</span>
         </Button>
@@ -154,20 +154,20 @@ const SignatureHistory: React.FC = () => {
               className="bg-slate-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200"
             >
               {/* Main Row */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <div className="flex-shrink-0 mt-1">
                   {getStatusIcon(item)}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   {/* Timestamp & Status */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-slate-500 font-medium">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
                       {formatRelativeTime(item.timestamp)}
                     </span>
                     {item.verificationResult && (
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
                           item.verificationResult.isValid
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
@@ -182,69 +182,67 @@ const SignatureHistory: React.FC = () => {
                   <p className="text-sm text-slate-900 break-words mb-3">
                     {abbreviateText(item.message, 80)}
                   </p>
-
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="space-y-4 mt-4 pt-4 border-t border-slate-200">
-                      {/* Full Message */}
-                      <DetailSection
-                        label="Message"
-                        content={item.message}
-                        onCopy={() => handleCopyToClipboard(item.message, 'Message', `${item.id}-msg`)}
-                        isCopied={wasCopied}
-                      />
-
-                      {/* Signature */}
-                      <DetailSection
-                        label="Signature"
-                        content={item.signature}
-                        onCopy={() => handleCopyToClipboard(item.signature, 'Signature', `${item.id}-sig`)}
-                        isCopied={wasCopied}
-                        monospace
-                      />
-
-                      {/* Signer Address */}
-                      {item.verificationResult?.signer && (
-                        <DetailSection
-                          label="Signer Address"
-                          content={item.verificationResult.signer}
-                          onCopy={() => handleCopyToClipboard(item.verificationResult!.signer, 'Address', `${item.id}-addr`)}
-                          isCopied={wasCopied}
-                          monospace
-                        />
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                {/* Actions - Compact and Same Size */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
                     onClick={() => handleExpandToggle(item.id)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer flex-shrink-0"
                   >
                     {isExpanded ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
                       <ChevronDown className="w-4 h-4" />
                     )}
-                  </Button>
+                  </button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     onClick={() => handleReVerification(item)}
                     disabled={isCurrentlyVerifying}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-purple-500 text-purple-700 hover:bg-gradient-to-r hover:from-purple-600 hover:to-blue-600 hover:border-purple-600 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-600 disabled:hover:bg-transparent disabled:hover:text-slate-600 flex-shrink-0"
                   >
                     {isCurrentlyVerifying ? (
-                      <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
                     ) : (
                       <RotateCw className="w-4 h-4" />
                     )}
-                  </Button>
+                  </button>
                 </div>
               </div>
+
+              {/* Expanded Details - Full Width */}
+              {isExpanded && (
+                <div className="space-y-4 mt-4 pt-4 border-t border-slate-200 relative left-0 right-0 -ml-3 -mr-3 sm:-ml-4 sm:-mr-4 px-3 sm:px-4 w-[calc(100%+1.5rem)] sm:w-[calc(100%+2rem)]">
+                  {/* Full Message */}
+                  <DetailSection
+                    label="Message"
+                    content={item.message}
+                    onCopy={() => handleCopyToClipboard(item.message, 'Message', `${item.id}-msg`)}
+                    isCopied={wasCopied}
+                  />
+
+                  {/* Signature */}
+                  <DetailSection
+                    label="Signature"
+                    content={item.signature}
+                    onCopy={() => handleCopyToClipboard(item.signature, 'Signature', `${item.id}-sig`)}
+                    isCopied={wasCopied}
+                    monospace
+                  />
+
+                  {/* Signer Address */}
+                  {item.verificationResult?.signer && (
+                    <DetailSection
+                      label="Signer Address"
+                      content={item.verificationResult.signer}
+                      onCopy={() => handleCopyToClipboard(item.verificationResult!.signer, 'Address', `${item.id}-addr`)}
+                      isCopied={wasCopied}
+                      monospace
+                    />
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -261,14 +259,14 @@ const DetailSection: React.FC<{
   isCopied?: boolean;
   monospace?: boolean;
 }> = ({ label, content, onCopy, isCopied, monospace }) => (
-  <div>
+  <div className="w-full">
     <div className="flex items-center justify-between mb-2">
-      <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+      <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide flex-shrink-0">
         {label}
       </label>
       <button
         onClick={onCopy}
-        className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 transition-colors"
+        className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 transition-colors cursor-pointer flex-shrink-0 ml-2"
       >
         {isCopied ? (
           <>
@@ -284,7 +282,7 @@ const DetailSection: React.FC<{
       </button>
     </div>
     <div
-      className={`bg-white p-3 rounded-lg border border-slate-200 text-sm text-slate-900 break-all ${
+      className={`bg-white p-3 rounded-lg border border-slate-200 text-sm text-slate-900 w-full break-words overflow-wrap-anywhere word-break-break-all ${
         monospace ? 'font-mono text-xs' : ''
       }`}
     >

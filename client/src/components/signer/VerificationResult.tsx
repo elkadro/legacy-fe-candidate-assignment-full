@@ -54,7 +54,7 @@ const VerificationResult: React.FC<VerificationResultProps> = ({ result, onClose
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="cursor-pointer">
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -90,7 +90,7 @@ const VerificationResult: React.FC<VerificationResultProps> = ({ result, onClose
               </label>
               <button
                 onClick={() => handleCopy(result.signer, 'Address')}
-                className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 transition-colors"
+                className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 transition-colors cursor-pointer"
               >
                 {copied === 'Address' ? (
                   <>
@@ -125,7 +125,7 @@ const VerificationResult: React.FC<VerificationResultProps> = ({ result, onClose
               </label>
               <button
                 onClick={() => handleCopy(result.originalMessage, 'Message')}
-                className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 transition-colors"
+                className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 transition-colors cursor-pointer"
               >
                 {copied === 'Message' ? (
                   <>
