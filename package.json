@@ -1,0 +1,22 @@
+{
+    "name": "dynamic-signer-verifier",
+    "description": "A monorepo for dynamic.xyz headless signer and verifier applications",
+    "version": "1.0.0",
+    "private": true,
+    "engines": {
+      "node": ">=18.0.0"
+    },
+    "workspaces": [
+      "client",
+      "server"
+    ],
+    "scripts": {
+      "dev": "concurrently \"yarn dev:server\" \"yarn dev:client\"",
+      "dev:server": "yarn workspace server dev",
+      "dev:client": "yarn workspace client dev",
+      "build": "yarn workspaces run build"
+    },
+    "devDependencies": {
+      "concurrently": "^7.6.0"
+    }
+  }

@@ -1,0 +1,300 @@
+openapi: 3.0.0
+info:
+  title: Dynamic Signer Verifier API
+  version: 1.0.0
+  description: API documentation for the Dynamic Signer Verifier project - Web3 message signing and verification API
+
+servers:
+  - url: /api
+    description: API base path
+
+paths:
+  /auth/verify-signature:
+    post:
+      summary: Verify a signed message and return signer address
+      description: Verifies a Web3 signature against a message, compares the recovered signer address with the expected signer, and returns the verification result. Rate limited to 1 request per 5 seconds per IP.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+                - signature
+                - expectedSigner
+              properties:
+                message:
+                  type: string
+                  description: The original message that was signed
+                  example: "Hello, World!"
+                signature:
+                  type: string
+                  description: The hex-encoded signature (0x prefix + 130 hex characters)
+                  pattern: '^0x[a-fA-F0-9]{130}$'
+                  example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234"
+                expectedSigner:
+                  type: string
+                  description: The Ethereum address that is expected to have signed the message
+                  pattern: '^0x[a-fA-F0-9]{40}$'
+                  example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+      responses:
+        '200':
+          description: Signature verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      isValid:
+                        type: boolean
+                        example: true
+                      signer:
+                        type: string
+                        description: The recovered Ethereum address of the signer
+                        example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                      originalMessage:
+                        type: string
+                        example: "Hello, World!"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T10:30:00.000Z"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /auth/session:
+    post:
+      summary: Create a session after signature verification
+      description: Creates a new session token after verifying a signature. The session token is set as an HTTP-only cookie and expires in 24 hours. Rate limited to 1 request per 5 seconds per IP.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+                - signature
+                - walletAddress
+              properties:
+                message:
+                  type: string
+                  description: The original message that was signed
+                  example: "Hello, World!"
+                signature:
+                  type: string
+                  description: The hex-encoded signature (0x prefix + 130 hex characters)
+                  pattern: '^0x[a-fA-F0-9]{130}$'
+                  example: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234"
+                walletAddress:
+                  type: string
+                  description: The Ethereum wallet address (must match the signer address)
+                  pattern: '^0x[a-fA-F0-9]{40}$'
+                  example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+      responses:
+        '201':
+          description: Session created successfully
+          headers:
+            Set-Cookie:
+              description: HTTP-only session token cookie
+              schema:
+                type: string
+                example: "sessionToken=abc123; HttpOnly; Secure; SameSite=Strict; Max-Age=86400"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      sessionToken:
+                        type: string
+                        description: The session token (also set as cookie)
+                        example: "abc123def456"
+                      walletAddress:
+                        type: string
+                        example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-16T10:30:00.000Z"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Signature does not match wallet address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+    get:
+      summary: Get current session information
+      description: Retrieves the current session information if a valid session token exists (from cookie or Authorization header).
+      tags:
+        - Authentication
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Session information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      walletAddress:
+                        type: string
+                        example: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                      expiresAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-16T10:30:00.000Z"
+        '401':
+          description: Unauthorized - No valid session found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Destroy session (logout)
+      description: Destroys the current session and clears the session cookie.
+      tags:
+        - Authentication
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Session destroyed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Session destroyed successfully"
+        '401':
+          description: Unauthorized - No valid session found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /metrics:
+    get:
+      summary: Get Prometheus metrics
+      description: Returns Prometheus-formatted metrics for monitoring and observability. Includes HTTP request duration metrics and custom business metrics.
+      tags:
+        - Metrics
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP http_request_duration_milliseconds Duration of HTTP requests in milliseconds
+                  # TYPE http_request_duration_milliseconds histogram
+                  http_request_duration_milliseconds_bucket{method="POST",route="/api/auth/verify-signature",status_code="200",le="100"} 5
+                  http_request_duration_milliseconds_bucket{method="POST",route="/api/auth/verify-signature",status_code="200",le="500"} 10
+                  http_request_duration_milliseconds_sum{method="POST",route="/api/auth/verify-signature",status_code="200"} 2500
+                  http_request_duration_milliseconds_count{method="POST",route="/api/auth/verify-signature",status_code="200"} 15
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Invalid signature for this message"
+        message:
+          type: string
+          example: "Invalid signature for this message"
+
+    RateLimitError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Too many requests"
+        message:
+          type: string
+          example: "Rate limit exceeded. Please try again in 3 second(s)."
+        retryAfter:
+          type: integer
+          description: Number of seconds to wait before retrying
+          example: 3
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionToken
+      description: Session token stored in HTTP-only cookie
+    
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Session token in Authorization header (Bearer token)
